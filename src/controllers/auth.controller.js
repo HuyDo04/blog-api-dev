@@ -5,13 +5,15 @@ const { compare, hash } = require("@/utils/bcrypt");
 const { createToken, verifyToken, signToken } = require("@/utils/jwt");
 const bcrypt = require("bcrypt")
 const md5 = require("md5");
-const expiresIn = 30;
+const expiresIn = 3600;
 
 // Register
 exports.register = async (req, res) => {
     try {
-        const {email, password, confirmPassword} = req.body;
+        const {username ,email, password, confirmPassword} = req.body;
         
+        if(!username) return res.status(401).json({message:"Username không được để trống"})
+
         if( password !== confirmPassword) {
             return res.status(400).json({ message: "Mật khẩu không khớp." });
         }
@@ -25,14 +27,15 @@ exports.register = async (req, res) => {
         const hashedPassword = await hash(password, 10);
         
         const newUser = await authService.create({
+            username,
             email,
             password: hashedPassword
         })
 
         const token = createToken(
             {userId: newUser.id},
-            {expiresIn: 60},
-            // {expiresIn: 60 * 60 * 12}
+            // {expiresIn: expiresIn},
+            { expiresIn: "2d" }
         )
 
         await authService.update(newUser.id, {
@@ -162,7 +165,9 @@ exports.login = async (req, res) => {
 
     const token = signToken({userId: user.id})
     const refreshToken = await refreshTokenService.createRefreshToken(user.id);
-
+    
+    // req.session.userId = user.id;
+    // Bổ sung token lưu vào local hoặc cookie
     res.status(200).json({
         access_token: token,
         refresh_token : refreshToken.token,
@@ -177,14 +182,13 @@ exports.forgotPassword = async (req, res) => {
     const {email} = req.body;
 
     const user = await authService.getByEmail(email);
-    console.log("User:", user);
     
     if (!user) return res.status(404).json({message: "Email không hợp lệ"});
 
     if (!user.verified_at) return res.status(400).json({message: "Email chưa được xác thực. Vui lòng xác thực email"});
 
     let otp = user.reset_password_otp;
-  let expiresAt = user.reset_password_otp_expires_at;
+    let expiresAt = user.reset_password_otp_expires_at;
 
   const now = new Date();
 
@@ -230,8 +234,7 @@ exports.verifyOtp = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
     const {email, password, confirmPassword} = req.body;
-    console.log(email);
-    console.log(password)
+
     if (!email || !password || !confirmPassword) return res.status(400).json({ message: "Không được để trống" });
 
     if (password !== confirmPassword) return res.status(400).json({message:"Mật khẩu không khớp"});
@@ -290,8 +293,113 @@ exports.resendOtp = async (req, res) => {
     message: "Đã gửi lại OTP đặt lại mật khẩu. Vui lòng kiểm tra email.",
     });
 };
-  
 
-exports.me = async (req, res) => {
-    res.success(200).json(req.user)
+exports.changePassword = async (req, res) => {
+    
+  try {
+    const userId = req.session.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Bạn chưa đăng nhập." });
+    }
+
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin." });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Mật khẩu mới không khớp." });
+    }
+
+    const user = await authService.getById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+    }
+
+    const isMatch = await compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu cũ không đúng." });
+    }
+
+    const hashed = await hash(newPassword, 10);
+
+    await authService.update(userId, { password: hashed });
+
+    return res.status(200).json({ message: "Đổi mật khẩu thành công." });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ message: "Đã xảy ra lỗi. Vui lòng thử lại." });
+  }
 }
+
+exports.logout = async (req, res) => {
+    // await 
+    return res.status(201).json({message:"Đăng xuất thành công"})
+}
+
+// get current user
+exports.getCurrentUser = async (req, res) => {
+  console.log(req.user);
+  
+  
+  return res.status(200).json(req.user)
+}
+
+// Refresh Token
+exports.refreshToken = async (req, res) => {
+  try {
+    const oldToken = req.body.refresh_token;
+
+    const refreshTokenRecord = await refreshTokenService.getByToken(oldToken);
+
+    if (!refreshTokenRecord) {
+      return res.status(403).json("Refresh token invalid");
+    }
+
+    const user = await authService.getById(refreshTokenRecord.user_id);
+    if (!user) {
+      return res.status(401).json("Invalid user");
+    }
+
+    // Tạo access token mới
+    const accessToken = signToken({ userId: refreshTokenRecord.user_id });
+
+    // Xoá refresh token cũ
+    await refreshTokenService.removeByToken(oldToken);
+
+    // Tạo refresh token mới
+    const newRefreshToken = await refreshTokenService.createRefreshToken(user.id);
+
+    return res.status(200).json({
+      access_token: accessToken,
+      refresh_token: newRefreshToken.token,
+      token_type: "Bearer",
+      expires_in: 60 * 60,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    // Lấy refresh token từ body hoặc header
+    const refreshToken = req.body.refresh_token;
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required." });
+    }
+
+    // Xoá refresh token khỏi DB
+    await refreshTokenService.removeByToken(refreshToken);
+
+    return res.status(200).json({ message: "Đăng xuất thành công." });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json({ message: "Đã xảy ra lỗi. Vui lòng thử lại." });
+  }
+};

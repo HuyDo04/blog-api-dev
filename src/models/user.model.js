@@ -7,6 +7,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
     email: {
       type: DataTypes.STRING,
       unique:true,
@@ -44,6 +49,10 @@ module.exports = (sequelize, DataTypes) => {
     reset_password_otp_expires_at: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
     }
   }, {
     tableName: 'users',

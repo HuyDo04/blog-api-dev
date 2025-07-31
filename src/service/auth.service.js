@@ -8,7 +8,6 @@ exports.create = async (data) => {
 
 exports.getById = async (id) => {
     const user = await User.findByPk(id)    
-    console.log("User auth:", user);
     
     return user
 }

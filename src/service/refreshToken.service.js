@@ -23,3 +23,8 @@ exports.getByToken = async (token) => {
         }
     })
 }
+
+exports.removeByToken = async (token) => {
+  await RefreshToken.destroy({ where: { token } });
+};
+

@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const MAIL_JWT_SECRET = process.env.MAIL_JWT_SECRET;
-const expiresDefault = 30;
+const expiresDefault = 3600;
 
 exports.signToken = (payload, expiresIn = expiresDefault) => {
     const token = jwt.sign(payload, MAIL_JWT_SECRET, {expiresIn});
@@ -16,6 +16,7 @@ exports.createToken = (payload, options) => {
 exports.verifyToken = (token) => {
     try {
         const decoded = jwt.verify(token, MAIL_JWT_SECRET);
+        console.log("Decoded Token:", decoded);
         return {
             success: true,
             data: decoded
