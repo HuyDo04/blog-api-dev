@@ -6,7 +6,6 @@ const sessionService = require("@/service/session.service")
 
 async function session(req, res, next) {
     let _sid = req.cookies.sid;
-    console.log("sid:",req.cookies);
     
     let session = _sid && (await sessionService.findBySid(req.cookies.sid));
 
@@ -26,8 +25,6 @@ async function session(req, res, next) {
         });
     });
 
-    console.log("Cookie sid:", req.cookies.sid);
-    console.log("Session loaded:", session);
     next();
 }
 

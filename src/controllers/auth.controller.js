@@ -345,7 +345,6 @@ exports.logout = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   console.log(req.user);
   
-  
   return res.status(200).json(req.user)
 }
 

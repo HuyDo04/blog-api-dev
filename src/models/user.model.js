@@ -59,16 +59,19 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  User.associate = function(models) {
     // User belongsTo Post
     User.associate = function(models) {
+      // Liên kết với bảng RefreshToken
       User.hasMany(models.RefreshToken, {
-        foreignKey: 'user_id',  // tên cột khóa ngoại trong bảng refresh_tokens
-        as: 'refreshTokens',    // tên alias để include sau này: user.refreshTokens
+        foreignKey: 'user_id',
+        as: 'refreshTokens',
+      });
+  
+      // Liên kết với bảng Post
+      User.hasMany(models.Post, {
+        foreignKey: 'authorId',
+        as: 'posts',
       });
     };
-    
-  };
-
   return User;
 };

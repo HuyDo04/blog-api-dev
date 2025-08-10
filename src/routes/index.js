@@ -9,8 +9,10 @@ const changePassword = require("./auth/changePassword.route");
 const logoutRouter = require("./auth/logout.route");
 const meRoute = require("./auth/me.route");
 const refreshTokenRoute = require("./auth/refreshToken.route")
-const avatarRoute = require("./user.route")
-
+const userRoute = require("./user.route")
+const topicRoute = require("./topic.route");
+const postRoute = require("./post.route");
+const commentRoute = require("./comment.route");
 
 const router = express.Router();
 
@@ -23,6 +25,9 @@ router.use("/forgot-password", forgotPasswordRouter)
 router.use("/change-password", changePassword)
 router.use("/me", meRoute)
 router.use("/refresh-token", refreshTokenRoute)
-router.use("/users/:id/avatar", refreshTokenRoute)
+router.use("/users", userRoute)
+router.use("/topics", topicRoute)
+router.use("/posts", postRoute)
+router.use("/comments", commentRoute)
 
 module.exports = router
