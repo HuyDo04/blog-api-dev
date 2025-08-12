@@ -1,4 +1,4 @@
-const { User } = require("../models");
+const { User, Post } = require("../models");
 
 exports.getAllUser = async () => {
   return await User.findAll();
@@ -25,4 +25,27 @@ exports.deleteUser = async (id) => {
   
   await user.destroy();
   return true;
+};
+
+exports.updateAvatar = async (userId, avatarPath) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  user.avatar = avatarPath;
+  await user.save();
+  return user;
+};
+
+exports.getUserPosts = async (userId) => {
+  const user = await User.findByPk(userId, {
+    include: [{
+      model: Post,
+      as: 'posts'
+    }]
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user.posts;
 };

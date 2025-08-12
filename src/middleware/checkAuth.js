@@ -8,14 +8,12 @@ const checkAuth = async (req, res, next) => {
       ? authHeader.split(" ")[1]
       : null;
 
-      console.log("Authorization Header:", authHeader);
       
     if (!token) {
       return res.status(401).json({ message: "Token does not exist" });
     }
 
     const payload = verifyToken(token);
-    console.log("Token Payload:", payload);
     
     if (!payload || !payload.data?.userId) {
       return res.status(401).json({ message: "Invalid token payload" });

@@ -13,8 +13,12 @@ module.exports = (sequelize, DataTypes) => {
       slug: {
         type: DataTypes.STRING,
         unique: true,
+        allowNull: false, // Slug should not be null
       },
-      featuredImage: DataTypes.STRING,
+      featuredImage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       published: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -40,40 +44,52 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "posts",
       timestamps: true,
       hooks: {
-        beforeValidate: async (post) => {
-          if (!post.slug && post.title) {
-            let baseSlug = slugify(post.title);
+        beforeValidate: async (post, options) => {
+          // Only run on creation or if title/slug changes.
+          if (post.isNewRecord || post.changed('title') || post.changed('slug')) {
+            let baseSlug = slugify(post.slug || post.title || '');
+            if (!baseSlug) {
+              // Let the notNull validation handle cases where title and slug are empty.
+              return;
+            }
+
+            const PostModel = sequelize.models.Post;
             let uniqueSlug = baseSlug;
             let counter = 1;
 
-            // Kiểm tra trùng slug trong DB
-            const PostModel = sequelize.models.Post;
-            while (await PostModel.findOne({ where: { slug: uniqueSlug } })) {
-              uniqueSlug = `${baseSlug}-${counter}`;
-              counter++;
+            const where = { slug: uniqueSlug };
+            // If updating an existing post, exclude its own ID from the check.
+            if (!post.isNewRecord) {
+              where.id = { [sequelize.Op.ne]: post.id };
             }
 
+            // Keep finding a new slug until it is unique.
+            while (await PostModel.findOne({ where })) {
+              uniqueSlug = `${baseSlug}-${counter}`;
+              where.slug = uniqueSlug;
+              counter++;
+            }
             post.slug = uniqueSlug;
           }
         },
         beforeCreate: (post) => {
-          // Tính readTime
+          // Calculate readTime
           if (post.content) {
             const words = post.content.trim().split(/\s+/).length;
             post.readTime = Math.max(1, Math.ceil(words / 200));
           }
-          // Nếu publish lần đầu
-          if (!post.publishedAt && post.dataValues.published) {
+          // Set publishedAt if it's the first time publishing
+          if (!post.publishedAt && post.published) {
             post.publishedAt = new Date();
           }
         },
         beforeUpdate: (post) => {
-          // Re-calc readTime nếu content thay đổi
+          // Re-calc readTime if content changes
           if (post.changed("content")) {
             const words = post.content.trim().split(/\s+/).length;
             post.readTime = Math.max(1, Math.ceil(words / 200));
           }
-          // Nếu chuyển từ draft sang publish
+          // Set publishedAt if changing from draft to published
           if (post.changed("published") && post.published && !post.publishedAt) {
             post.publishedAt = new Date();
           }

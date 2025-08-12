@@ -16,7 +16,6 @@ exports.createToken = (payload, options) => {
 exports.verifyToken = (token) => {
     try {
         const decoded = jwt.verify(token, MAIL_JWT_SECRET);
-        console.log("Decoded Token:", decoded);
         return {
             success: true,
             data: decoded

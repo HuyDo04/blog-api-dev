@@ -12,8 +12,6 @@ exports.getAllTopics = async (req, res) => {
 // Get topic by ID 
 exports.getTopicById = async (req, res) => {
     try {
-      console.log(`Fetching topic with ID: ${req.params.id}`);
-
         const topic = await topicService.getTopicById(req.params.id);
         
         if (!topic) {

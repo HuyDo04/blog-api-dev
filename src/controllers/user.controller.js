@@ -69,14 +69,20 @@ exports.deleteUser = async (req, res) => {
 
 exports.updateAvatar = async (req, res) => {
   try {
-    const user = await authService.getById(req.params.id);
-    if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
+    const userId = req.user.id;
+    if (req.sameAvatar) {
+      return res.json({
+        message: "Avatar đã giống với ảnh hiện tại, không cần cập nhật.",
+        avatar: req.user.avatar, // Return current avatar path
+      });
+    }
 
-    // Đảm bảo có file upload
-    if (!req.file) return res.status(400).json({ message: "Vui lòng chọn ảnh để upload" });
+    if (!req.file) {
+      return res.status(400).json({ message: "Vui lòng chọn ảnh để upload" });
+    }
 
-    user.avatar = `/uploads/avatars/${req.file.filename}`;
-    await user.save();
+    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+    const user = await userService.updateAvatar(userId, avatarPath);
 
     res.json({
       message: "Cập nhật avatar thành công",
@@ -84,6 +90,23 @@ exports.updateAvatar = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi cập nhật avatar:", error);
+    if (error.message === "User not found") {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+exports.getUserPosts = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const posts = await userService.getUserPosts(userId);
+    res.json(posts);
+  } catch (error) {
+    console.error("Lỗi lấy bài viết của người dùng:", error);
+    if (error.message === "User not found") {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
     res.status(500).json({ message: "Lỗi server" });
   }
 };

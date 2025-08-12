@@ -16,6 +16,10 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser())
+
+// Serve static files from the "public" directory
+app.use(express.static("public"));
+
 app.use("/api/v1",router)
 
 app.listen(port, () => {
