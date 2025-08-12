@@ -129,3 +129,17 @@ exports.deletePostMedia = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi xóa media", error: error.message });
   }
 };
+
+exports.getRelatedPosts = async (req, res) => {
+  try {
+    const { topicId, excludePostId, limit } = req.query;
+    const posts = await postService.getPostsByTopicAndExcludePost(
+      topicId,
+      excludePostId,
+      limit
+    );
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi lấy danh sách bài viết liên quan", error: error.message });
+  }
+};

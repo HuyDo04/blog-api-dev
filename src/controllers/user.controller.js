@@ -110,3 +110,17 @@ exports.getUserPosts = async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
+
+exports.checkUsername = async (req, res) => {
+    try {
+        const { username } = req.query;
+        if (!username) {
+            return res.status(400).json({ message: "Username is required" });
+        }
+        const exists = await userService.checkUsernameExists(username);
+        res.json({ exists });
+    } catch (error) {
+        console.error("Error checking username existence:", error);
+        res.status(500).json({ message: "Error checking username existence", error });
+    }
+};

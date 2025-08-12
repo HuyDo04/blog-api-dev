@@ -21,4 +21,7 @@ router.delete("/:id", userController.deleteUser);
 // router.post("/update-avatar/:id",upload.single("avatar"), userController.updateAvatar)
 router.patch("/me/avatar", checkAuth, uploadAvatar.single("avatar"), checkSameAvatar, userController.updateAvatar);
 
+// GET /users/check-username
+router.get("/check-username", userController.checkUsername);
+
 module.exports = router;

@@ -1,4 +1,5 @@
-const { Post, User, Topic } = require("@/models");
+const { Post, User, Topic, Sequelize } = require("@/models");
+const { Op } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
 
@@ -96,4 +97,29 @@ exports.deletePostMedia = async (postId, mediaIndex) => {
     console.error("Error deleting media file:", error);
     return false;
   }
+};
+
+exports.getPostsByTopicAndExcludePost = async (topicId, excludePostId, limit = 3) => {
+  return await Post.findAll({
+    where: {
+      topicId,
+      id: {
+        [Op.ne]: excludePostId
+      }
+    },
+    include: [
+      {
+        model: User,
+        as: "author",
+        attributes: ["id", "username", "avatar"]
+      },
+      {
+        model: Topic,
+        as: "topic",
+        attributes: ["id", "name", "slug", "icon"]
+      }
+    ],
+    limit: parseInt(limit, 10),
+    order: [["publishedAt", "DESC"]]
+  });
 };

@@ -4,6 +4,8 @@ const postController = require("@/controllers/post.controller");
 const uploadPost = require("@/middleware/uploadPost");
 // Get all posts
 router.get("/", postController.getAllPosts);
+// Get posts by topic
+router.get("/related", postController.getRelatedPosts);
 // Get post by ID
 router.get("/:id", postController.getPostById);
 // Get post by slug
@@ -17,12 +19,14 @@ router.post(
     ]),
     postController.createPost
   );
+
 router.put("/:id", uploadPost.fields([
     { name: "featuredImage", maxCount: 1 },
     { name: "media", maxCount: 10 }
   ]), 
   postController.updatePost
 );
+
 router.delete("/:id", postController.deletePost);
 router.delete("/:id/media/:mediaIndex", postController.deletePostMedia);
 module.exports = router;

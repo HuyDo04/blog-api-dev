@@ -49,3 +49,12 @@ exports.getUserPosts = async (userId) => {
   }
   return user.posts;
 };
+
+exports.checkUsernameExists = async (username) => {
+  const user = await User.findOne({
+    where: {
+      username: username,
+    },
+  });
+  return !!user; // Returns true if user exists, false otherwise
+};

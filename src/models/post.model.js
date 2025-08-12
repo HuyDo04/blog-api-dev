@@ -1,4 +1,5 @@
 const { slugify } = require("@/utils/slugify");
+const { Op } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   const Post = sequelize.define(
@@ -60,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
             const where = { slug: uniqueSlug };
             // If updating an existing post, exclude its own ID from the check.
             if (!post.isNewRecord) {
-              where.id = { [sequelize.Op.ne]: post.id };
+              where.id = { [Op.ne]: post.id };
             }
 
             // Keep finding a new slug until it is unique.
