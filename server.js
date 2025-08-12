@@ -7,6 +7,7 @@ const handleSession = require("@/middleware/handleSession");
 const cookieParser = require('cookie-parser');
 
 const app = express()
+app.set('etag', false);
 const port = process.env.PORT || 3000;
 const allowedOrigins = [
   process.env.FRONTEND_URL || "https://titokhd.online",
