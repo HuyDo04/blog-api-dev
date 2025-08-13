@@ -31,7 +31,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'Comments',
+          model: 'comments',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -62,6 +62,7 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Comments');
+    await queryInterface.dropTable('comments');
   },
 };
+
