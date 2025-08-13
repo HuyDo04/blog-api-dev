@@ -45,7 +45,7 @@ exports.register = async (req, res) => {
 
         })
 
-        const verifyUrl = `http://localhost:5173/verify-email?token=${token}`;
+        const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
         // const verifyUrl = `${req.protocol}://${req.host}/api/v1/verify-email?token=${token}`;
 
         
