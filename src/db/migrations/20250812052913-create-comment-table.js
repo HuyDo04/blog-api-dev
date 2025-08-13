@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Comments', {
+    await queryInterface.createTable('comments', {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
