@@ -130,7 +130,7 @@ exports.resendVerifyEmail = async (req, res) => {
             verify_token_expires_at: new Date(Date.now() + 60 * 1000),
           });
 
-        const verifyUrl = `http://localhost:5173/verify-email?token=${token}`;
+        const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
         // const verifyUrl = `${req.protocol}://${req.host}/api/v1/verify-email?token=${token}`;
         
         await transporter.sendMail({
