@@ -6,6 +6,7 @@ const { createToken, verifyToken, signToken } = require("@/utils/jwt");
 const bcrypt = require("bcrypt")
 const md5 = require("md5");
 const expiresIn = 3600;
+const jwt = require("jsonwebtoken");
 
 // Register
 exports.register = async (req, res) => {
@@ -295,14 +296,7 @@ exports.resendOtp = async (req, res) => {
 };
 
 exports.changePassword = async (req, res) => {
-    
   try {
-    const userId = req.session.userId;
-    
-    if (!userId) {
-      return res.status(401).json({ message: "Bạn chưa đăng nhập." });
-    }
-
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -313,20 +307,35 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ message: "Mật khẩu mới không khớp." });
     }
 
-    const user = await authService.getById(userId);
+    // 🔑 Lấy token từ header
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "Token không tồn tại." });
+
+    const token = authHeader.split(" ")[1];
+    console.log(token);
     
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.MAIL_JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn." });
+    }
+    console.log("decode:", decoded);
+    
+    const userId = decoded.userId; // id user từ payload token
+
+    const user = await authService.getById(userId);
+
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy người dùng." });
     }
 
     const isMatch = await compare(oldPassword, user.password);
-
     if (!isMatch) {
       return res.status(400).json({ message: "Mật khẩu cũ không đúng." });
     }
 
     const hashed = await hash(newPassword, 10);
-
     await authService.update(userId, { password: hashed });
 
     return res.status(200).json({ message: "Đổi mật khẩu thành công." });
@@ -334,7 +343,8 @@ exports.changePassword = async (req, res) => {
     console.error("Change password error:", error);
     return res.status(500).json({ message: "Đã xảy ra lỗi. Vui lòng thử lại." });
   }
-}
+};
+
 
 exports.logout = async (req, res) => {
     // await 
