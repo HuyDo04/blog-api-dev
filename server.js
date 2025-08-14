@@ -11,6 +11,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 const clientOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 
+console.log(`CORS Origin configured for: ${clientOrigin}`); // FOR DEBUGGING
+
 app.use(cors({
   origin: clientOrigin,
   credentials: true,
