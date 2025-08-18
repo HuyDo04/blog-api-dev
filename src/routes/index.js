@@ -13,6 +13,7 @@ const userRoute = require("./user.route")
 const topicRoute = require("./topic.route");
 const postRoute = require("./post.route");
 const commentRoute = require("./comment.route");
+const chatbotRouter = require("./chatbot.route");
 
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.use("/users", userRoute)
 router.use("/topics", topicRoute)
 router.use("/posts", postRoute)
 router.use("/comments", commentRoute)
+router.use("/conversations", chatbotRouter)
 
 module.exports = router
